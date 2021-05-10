@@ -7,6 +7,11 @@
         canvas {
             border: 1px solid #d3d3d3;
             background-color: #f1f1f1;
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
         }
     </style>
 </head>
@@ -14,19 +19,26 @@
 <body onload="startGame()">
     <script>
         var myGamePiece;
-        var myObstacles = [];
+        var myGameBall;
+        var myGameBall2;
+        var screenWidth = 480;
+        var screenHeight = 270;
 
         function startGame() {
-            myGamePiece = new component(150, 20, "red", 230, 250);
-            myGameBall = new ball(10, 20, 0, 0, "blue", 10);
+            myGamePiece = new component(150, 20, "red", ((screenWidth - 150) / 2), screenHeight - 20);
+            myGamePiece2 = new component(20, 150, "yellow", 0, ((screenHeight - 150) / 2));
+            myGameBall = new ball(screenWidth / 2, screenHeight / 2, 1, 1, "blue", 5);
+            myGameBall2 = new ball(screenWidth / 2, screenHeight / 2, -1.5, 2, "green", 5);
             myGameArea.start();
         }
 
         var myGameArea = {
             canvas: document.createElement("canvas"),
             start: function() {
-                this.canvas.width = 480;
-                this.canvas.height = 270;
+                this.canvas.width = screenWidth;
+                // this.canvas.width = 480;
+                this.canvas.height = screenHeight;
+                // this.canvas.height = 270;
                 this.context = this.canvas.getContext("2d");
                 document.body.insertBefore(this.canvas, document.body.childNodes[0]);
                 this.frameNo = 0;
@@ -68,21 +80,7 @@
                 this.x += this.speedX;
                 this.y += this.speedY;
             }
-            this.crashWith = function(otherobj) {
-                var myleft = this.x;
-                var myright = this.x + (this.width);
-                var mytop = this.y;
-                var mybottom = this.y + (this.height);
-                var otherleft = otherobj.x;
-                var otherright = otherobj.x + (otherobj.width);
-                var othertop = otherobj.y;
-                var otherbottom = otherobj.y + (otherobj.height);
-                var crash = true;
-                if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
-                    crash = false;
-                }
-                return crash;
-            }
+
         }
 
         function ball(x, y, speedX, speedY, color, size) {
@@ -95,7 +93,8 @@
             this.update = function() {
                 ctx = myGameArea.context;
                 ctx.fillStyle = color;
-                ctx.arc(this.x, this.y, this.size, Math.PI * 2);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -104,50 +103,122 @@
                 this.y += this.speedY;
             }
 
+            this.crashWithFloor = function(myGameArea) {
+                var myCenterX = this.x;
+                var myCenterY = this.y;
+                var myleft = myCenterX - (this.size);
+                var myright = myCenterX + (this.size);
+                var mytop = myCenterY - (this.size);
+                var mybottom = myCenterY + (this.size);
+                var crash = true;
+                if ((mybottom < myGameArea.canvas.height - 5) && (myleft > 5)) {
+                    crash = false;
+                }
+                return crash;
+            }
+            this.crashWithBounds = function(myGamePiece, myGamePiece2) {
+                var myCenterX = this.x;
+                var myCenterY = this.y;
+                var myleft = myCenterX - (this.size / 2);
+                var myright = myCenterX + (this.size / 2);
+                var mytop = myCenterY - (this.size / 2);
+                var mybottom = myCenterY + (this.size / 2);
+
+                var botplatformleft = myGamePiece.x;
+                var botplatformright = myGamePiece.x + (myGamePiece.width);
+                var botplatformtop = myGamePiece.y;
+                var botplatformbottom = myGamePiece.y + (myGamePiece.height);
+
+                var leftplatformleft = myGamePiece2.x;
+                var leftplatformright = myGamePiece2.x + (myGamePiece2.width);
+                var leftplatformtop = myGamePiece2.y;
+                var leftplatformbottom = myGamePiece2.y + (myGamePiece2.height);
+                var angleChange = 0;
+
+                // For case if there is just bottom platform
+
+                // if ((mybottom >= botplatformtop && myleft > botplatformleft && myright < botplatformright) || (mytop <= 0)) {
+                //     angleChange = 1;
+                // }
+                // if ((myleft <= 0) || (myright >= screenWidth)) {
+                //     angleChange = 2;
+                // }
+
+
+                // For case if there are 2 platforms
+
+                if ((mybottom >= botplatformtop && myleft > botplatformleft && myright < botplatformright) || (mytop <= 0)) {
+                    angleChange = 1;
+                }
+
+
+                if (myright >= screenWidth || (myleft <= leftplatformright && mybottom <= leftplatformbottom && mytop >= leftplatformtop)) {
+                    angleChange = 2;
+                }
+
+
+                return angleChange;
+
+
+            }
         }
 
         function updateGameArea() {
             var x, height, gap, minHeight, maxHeight, minGap, maxGap;
-            // for (i = 0; i < myObstacles.length; i += 1) {
-            //     if (myGamePiece.crashWith(myObstacles[i])) {
-            //         myGameArea.stop();
-            //         return;
-            //     }
-            // }
+
+            if (myGameBall.crashWithFloor(myGameArea)) {
+                myGameArea.stop();
+            }
+            if (myGameBall.crashWithBounds(myGamePiece, myGamePiece2) == 1) {
+                myGameBall.speedY *= -1;
+            }
+            if (myGameBall.crashWithBounds(myGamePiece, myGamePiece2) == 2) {
+                myGameBall.speedX *= -1;
+            }
+            if (myGameBall2.crashWithFloor(myGameArea)) {
+                myGameArea.stop();
+            }
+            if (myGameBall2.crashWithBounds(myGamePiece, myGamePiece2) == 1) {
+                myGameBall2.speedY *= -1;
+            }
+            if (myGameBall2.crashWithBounds(myGamePiece, myGamePiece2) == 2) {
+                myGameBall2.speedX *= -1;
+            }
+
             myGameArea.clear();
             myGameArea.frameNo += 1;
-            if (myGameArea.frameNo == 1 || everyinterval(150)) {
-                x = myGameArea.canvas.width;
-                minHeight = 20;
-                maxHeight = 200;
-                height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
-                minGap = 50;
-                maxGap = 200;
-                gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
-                // myObstacles.push(new component(10, height, "green", x, 0));
-                // myObstacles.push(new component(10, x - height - gap, "green", x, height + gap));
-            }
-            for (i = 0; i < myObstacles.length; i += 1) {
-                myObstacles[i].x += -1;
-                myObstacles[i].update();
-            }
+
             if (myGameArea.keys && myGameArea.keys[37]) {
-                myGamePiece.speedX = -1;
+                moveleft()
+                myGamePiece.newPos();
+                clearmove();
+            }
+            if (myGameArea.keys && myGameArea.keys[38]) {
+                moveup()
+                myGamePiece2.newPos();
+                clearmove();
             }
             if (myGameArea.keys && myGameArea.keys[39]) {
-                myGamePiece.speedX = 1;
+                moveright();
+                myGamePiece.newPos();
+                clearmove();
             }
-            // if (myGameArea.keys && myGameArea.keys[38]) {
-            //     myGamePiece.speedY = -1;
-            // }
-            // if (myGameArea.keys && myGameArea.keys[40]) {
-            //     myGamePiece.speedY = 1;
-            // }
+
+            if (myGameArea.keys && myGameArea.keys[40]) {
+                movedown();
+                myGamePiece2.newPos();
+                clearmove();
+            }
+
+
             myGamePiece.newPos();
             myGamePiece.update();
-            clearmove();
+            myGamePiece2.newPos();
+            myGamePiece2.update();
             myGameBall.newPos();
             myGameBall.update();
+            myGameBall2.newPos();
+            myGameBall2.update();
         }
 
 
@@ -159,31 +230,36 @@
         }
 
         function moveup() {
-            myGamePiece.speedY = -1;
+            myGamePiece2.speedY = -5;
         }
 
         function movedown() {
-            myGamePiece.speedY = 1;
+            myGamePiece2.speedY = 5;
         }
 
         function moveleft() {
-            myGamePiece.speedX = -1;
+            myGamePiece.speedX = -5;
         }
 
         function moveright() {
-            myGamePiece.speedX = 1;
+            myGamePiece.speedX = 5;
         }
 
         function clearmove() {
             myGamePiece.speedX = 0;
             myGamePiece.speedY = 0;
+            myGamePiece2.speedX = 0;
+            myGamePiece2.speedY = 0;
         }
     </script>
-    <div style="text-align:center;width:480px;">
-        <!-- <button onmousedown="moveup()" onmouseup="clearmove()" ontouchstart="moveup()">UP</button><br><br> -->
+    <div style="text-align:center;width:100%">
+        <button onmousedown="moveup()" onmouseup="clearmove()" ontouchstart="moveup()">UP</button><br><br>
         <button onmousedown="moveleft()" onmouseup="clearmove()" ontouchstart="moveleft()">LEFT</button>
         <button onmousedown="moveright()" onmouseup="clearmove()" ontouchstart="moveright()">RIGHT</button><br><br>
-        <!-- <button onmousedown="movedown()" onmouseup="clearmove()" ontouchstart="movedown()">DOWN</button> -->
+        <button onmousedown="movedown()" onmouseup="clearmove()" ontouchstart="movedown()">DOWN</button><br><br>
+        <button onmousedown="myGameArea.start()" ontouchstart="myGameArea.start()">START</button>
+        <button onmousedown="startGame()" ontouchstart="startGame()">NEW GAME</button>
+        <button onmousedown="myGameArea.stop()" ontouchstart="myGameArea.stop()">STOP</button><br><br>
     </div>
 </body>
 
