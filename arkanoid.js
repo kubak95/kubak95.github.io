@@ -22,6 +22,7 @@
    var defaultPlatformSize = 150;
    var smallPlatformSize = defaultPlatformSize * 0.8;
    var bigPlatformSize = defaultPlatformSize * 1.2;
+   var AIenabled = false;
 
    function startGame() {
        balls.length = 0;
@@ -198,6 +199,8 @@
        this.speedY = 0;
        this.x = x;
        this.y = y;
+       this.centerX = this.x + (this.width / 2);
+       this.centerY = this.y + (this.height / 2);
        this.image = new Image();
        this.image.src = texture;
        this.type = type;
@@ -297,37 +300,50 @@
 
        myGameArea.clear();
        myGameArea.frameNo += 1;
+       if (AIenabled == false) {
+           if (myGameArea.keys && myGameArea.keys[37]) {
+               if (inverted) {
+                   moveright();
+               } else {
+                   moveleft();
+               }
+           }
+           if (myGameArea.keys && myGameArea.keys[38]) {
+               if (inverted) {
+                   movedown();
+               } else {
+                   moveup();
+               }
+           }
+           if (myGameArea.keys && myGameArea.keys[39]) {
+               if (inverted) {
+                   moveleft();
+               } else {
+                   moveright();
+               }
+           }
 
-       if (myGameArea.keys && myGameArea.keys[37]) {
-           if (inverted) {
-               moveright();
-           } else {
+           if (myGameArea.keys && myGameArea.keys[40]) {
+               if (inverted) {
+                   moveup();
+               } else {
+                   movedown();
+               }
+           }
+       } else {
+           if (balls[0].x < myGamePiece.centerX) {
                moveleft();
            }
-       }
-       if (myGameArea.keys && myGameArea.keys[38]) {
-           if (inverted) {
-               movedown();
-           } else {
-               moveup();
-           }
-       }
-       if (myGameArea.keys && myGameArea.keys[39]) {
-           if (inverted) {
-               moveleft();
-           } else {
+           if (balls[0].x > myGamePiece.centerX) {
                moveright();
            }
-       }
-
-       if (myGameArea.keys && myGameArea.keys[40]) {
-           if (inverted) {
+           if (balls[0].y < myGamePiece2.centerY) {
                moveup();
-           } else {
+           }
+           if (balls[0].y > myGamePiece2.centerY) {
                movedown();
            }
        }
-
        myGamePiece.newPos();
        myGamePiece.update();
        myGamePiece2.newPos();
@@ -351,7 +367,7 @@
                    if (block.type == "B") {
                        brokenBlocksB += 1;
                    } else if (block.type == "A") {
-                       if ((Math.floor(Math.random() * 5) + 1) % 5 != 0) {
+                       if ((Math.floor(Math.random() * 5) + 1) % 5 == 0) {
                            var bonusType = Math.floor(Math.random() * bonusTypes.length);
                            spawnBonus(block.x, block.y, bonusTypes[bonusType]);
 
@@ -487,4 +503,8 @@
        bonusBlocks.push(new component(50, 20, "blockBonus.png", x, y, bonus));
        console.log("Bonus " + bonus + " spawned at " + x + " " + y);
 
+   }
+
+   function toggleAI() {
+       AIenabled = !AIenabled;
    }
