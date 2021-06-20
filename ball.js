@@ -14,7 +14,7 @@ class ball {
 
         ctx = myGameArea.context;
         ctx.save();
-        ctx.globalAlpha = 0.1;
+        // ctx.globalAlpha = 0.1;
 
         ctx = myGameArea.context;
 
@@ -366,14 +366,14 @@ class ball {
 
 
     collisionWithBall = function(anotherBall) {
-        console.log("wchodzi w kolizje");
+        // console.log("wchodzi w kolizje");
         if ((this.x + this.size >= anotherBall.x - anotherBall.size && this.x - this.size <= anotherBall.x + anotherBall.size) && (this.y + this.size >= anotherBall.y && this.y - this.size <= anotherBall.y)) {
-            console.log("collision // time - " + time);
+            // console.log("collision // time - " + time);
             this.speedX *= -1;
             this.speedY *= -1;
         }
         if ((this.y + this.size >= anotherBall.y - anotherBall.size && this.y - this.size <= anotherBall.y + anotherBall.size) && (this.x - this.size <= anotherBall.x && this.x + this.size >= anotherBall.x)) {
-            console.log("collision // time - " + time);
+            // console.log("collision // time - " + time);
             this.speedX *= -1;
             this.speedY *= -1;
         }
